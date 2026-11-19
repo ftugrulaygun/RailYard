@@ -1,0 +1,17 @@
+Rail Yard League: number of moves of the reference planners on the public instances
+(lower is better; "make league" prints the moves of your planTrain)
+
+planner    main01   main02   main03   main04     TOTAL
+Rookie        944     2539     1294     1797      6574
+Bronze        357     1660      779      923      3719
+Silver        303     1411      573      922      3209
+Gold          223      907      451      636      2217
+
+planner    long01   long02   long03     TOTAL
+Rookie     364246   132019   165188    661453
+Bronze      94379    34444    53805    182628
+Silver      68229    23562    43266    135057
+Gold         8067     4423     5901     18391
+
+Rookie is the given planRookie. Bronze is the greedy plan of Section 6.2, so the
+starter planTrain (which returns the greedy plan) reaches Bronze once planGreedy works.
