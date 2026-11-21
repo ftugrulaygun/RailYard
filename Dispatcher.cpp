@@ -7,7 +7,14 @@ void Dispatcher::cmdYard(const std::string &args)
     // TODO: YARD <numSidings> <sidingCapacity> <loopCapacity>   (Section 4.1)
     //  A new yard replaces the old one (yard = Yard(k, c, q);).
     //   "Yard built: <k> siding(s) of capacity <c>, loop capacity <q>."
-    (void)args;
+    int k;
+    int c;
+    int q;
+    std::istringstream ss(args);
+    ss >> k >> c >> q;
+    yard = Yard(k, c, q);
+    
+    std::cout << "Yard built: " << k << " siding(s) of capacity " << c << ", loop capacity " << q << "." << std::endl;
 }
 
 void Dispatcher::cmdTrain(const std::string &args)
@@ -16,7 +23,28 @@ void Dispatcher::cmdTrain(const std::string &args)
     //   - the yard is not idle -> "Error: The yard is not empty."
     //   - otherwise read the n wagon numbers into a dynamic array, load the train
     //     and free the array -> "Train of <n> wagon(s) arrived."
-    (void)args;
+    if(!yard.isIdle())
+    {
+        std::cout << "Error: The yard is not empty." << std::endl;
+        return;
+    }
+
+    int count;
+    int train;
+    std::istringstream ss(args);
+    ss >> count;
+
+    int* newAr = new int[count];
+    for(int i = 0; i <= count-1; i++)
+    {   
+        ss >> train;
+        newAr[i] = train;
+    }
+
+    yard.loadTrain(newAr, count);
+    delete[] newAr;
+
+    std::cout << "Train of " << count << " wagon(s) arrived." << std::endl;
 }
 
 void Dispatcher::cmdMove(const std::string &args)
@@ -37,6 +65,37 @@ void Dispatcher::cmdMove(const std::string &args)
     //    "Error: <from> is empty."
     //    "Error: Wagon <w> cannot depart before wagon <next>."
     //    "Error: <to> is full."
+    int wagon;
+    yard.movable(from, wagon);
+    MoveResult result = yard.move(from, to);
+    if(result == MOVE_OK)
+    {
+        std::cout << "Moved " << wagon << " from " << fromName << " to " << toName << "." << std::endl;
+        if(yard.isAssembled())
+        {
+           std::cout << "Train assembled in " << yard.getMoves() << " move(s)." << std::endl; 
+        }
+    }else if(result == NO_SUCH_TRACK)
+    {
+        if(!yard.hasTrack(from))
+        {
+            std::cout << "Error: No track " << fromName << "." << std::endl;   
+        }else{
+            std::cout << "Error: No track " << toName << "." << std::endl;     
+        }
+    }else if(result == ILLEGAL_MOVE)
+    {
+        std::cout << "Error: Cannot move from " << fromName << " to " << toName << "." << std::endl;
+    }else if(result == SOURCE_EMPTY)
+    {
+        std::cout << "Error: " << fromName << " is empty." << std::endl;
+    }else if(result == WRONG_WAGON)
+    {
+        std::cout << "Error: Wagon " << wagon << " cannot depart before wagon " << yard.nextWagon() << "." << std::endl;
+    }else if(result == TARGET_FULL)
+    {
+       std::cout << "Error: " << toName << " is full." << std::endl; 
+    }
 }
 
 // GIVEN
