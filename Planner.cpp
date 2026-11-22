@@ -52,6 +52,49 @@ void planRookie(const Yard &start, MoveList &plan)
 }
 
 // ---------------------------------------------------------------- Greedy (YOU)
+static int chooseSiding(const Yard &yard, int w, int except)
+{
+    int bestGood = 0;
+    int bestGoodKey = 0;
+
+    int bestOther = 0;
+    int bestOtherTop = 0;
+
+    int BIG = yard.getTrainSize() + 1;
+
+    for(int i = 1; i <= yard.getNumSidings(); i++)
+    {
+        if((i == except) || (yard.getSiding(i).size() >= yard.getSidingCapacity()))
+        {
+            continue;
+        }
+
+        int key;
+        if(yard.getSiding(i).isEmpty())
+        {
+            key = BIG;
+        }else
+        {
+            yard.getSiding(i).peek(key);
+        }
+
+        if(key > w)
+        {
+            if(bestGood == 0 || key < bestGoodKey)
+            {
+                bestGood = i;
+                bestGoodKey = key;
+            }else
+            {
+                if(bestOther == 0 || key > bestOtherTop)
+                {
+                    bestOther = i;
+                    bestOtherTop = key;
+                }
+            }
+        }
+    }
+}
 
 void planGreedy(const Yard &start, MoveList &plan)
 {
@@ -60,8 +103,54 @@ void planGreedy(const Yard &start, MoveList &plan)
     //    2. Otherwise move the wagon in front of it (the front wagon of A, or the top
     //       wagon of its siding) to the siding that the greedy rule chooses.
     //  Follow the rule exactly: every move of your plan is compared with the move of the rule.
-    (void)start;
-    (void)plan;
+    Yard yard = start;
+
+    while(!yard.isAssembled())
+    {
+        int x = yard.nextWagon();
+        int w = 0;
+
+        if(yard.movable(TRACK_A, w) && (w == x))
+        {
+            go(yard, plan, TRACK_A, TRACK_D);
+            continue;
+        }
+
+        int top = 0;
+        for(int i = 1; i <= yard.getNumSidings(); i++)
+        {
+            if(yard.movable(i, w) && w == x)
+            {
+                top = i;
+            }
+        }
+
+        if(top != 0)
+        {
+            go(yard, plan, top, TRACK_D);
+            continue;
+        }
+
+        int source = 0;
+        if(yard.getArrival().indexOf(x) == -1)
+        {
+            for(int j = 1; j <= yard.getNumSidings(); j++)
+            {
+                if(yard.getSiding(j).indexOf(x) != -1)
+                {
+                    source = j;
+                }
+            }
+        }
+        yard.movable(source, w);
+
+        int target;
+
+        target = chooseSiding(yard, w, source);
+        go(yard, plan, source, target);
+    }
+    
+    
 }
 
 // ---------------------------------------------------------------- your planner (YOU)
