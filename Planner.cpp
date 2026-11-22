@@ -84,7 +84,8 @@ static int chooseSiding(const Yard &yard, int w, int except)
             {
                 bestGood = i;
                 bestGoodKey = key;
-            }else
+            }
+        }else
             {
                 if(bestOther == 0 || key > bestOtherTop)
                 {
@@ -92,8 +93,14 @@ static int chooseSiding(const Yard &yard, int w, int except)
                     bestOtherTop = key;
                 }
             }
-        }
     }
+
+    if(bestGood != 0)
+    {
+        return bestGood;
+    }
+
+    return bestOther;
 }
 
 void planGreedy(const Yard &start, MoveList &plan)
@@ -154,7 +161,41 @@ void planGreedy(const Yard &start, MoveList &plan)
 }
 
 // ---------------------------------------------------------------- your planner (YOU)
+static int chooseTarget(const Yard &yard, int w, int except)
+{
+    int siding = chooseSiding(yard, w, except);
 
+    bool goodOrBad = false;
+    int top = 0;
+
+    if(siding != 0)
+    {
+        if(yard.getSiding(siding).isEmpty())
+        {
+            goodOrBad = true;
+        }else
+        {
+            yard.getSiding(siding).peek(top);
+            goodOrBad = (top > w);
+        }
+    }
+    if(goodOrBad)
+    {
+        return siding;
+    }
+
+    if((yard.getLoopCapacity() > 0) && (except != TRACK_L) && (yard.getLoop().size() < yard.getLoopCapacity()) && (yard.getLoop().isEmpty() || yard.getLoop().get(yard.getLoop().size()-1) < w))
+    {
+        return TRACK_L;
+    }
+    return siding;
+}
+
+static bool chooseMove(const Yard &yard, int &from, int &to)
+{
+    int x = yard.nextWagon();
+    int w = 0;
+}
 void planTrain(const Yard &start, MoveList &plan)
 {
     // TODO: Section 6.3: your own planner. Any legal plan counts and shorter is better.
