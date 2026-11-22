@@ -1,5 +1,5 @@
 #include "Planner.h"
-
+#include <ctime>
 /* Level 6. The three planners of Planner.h:
  *   planRookie  GIVEN, an example of a planner. Read it before you start.
  *   planGreedy  YOU, the greedy yard master of Section 6.2.
@@ -209,7 +209,7 @@ static bool chooseMove(const Yard &yard, int &from, int &to)
         return true;
     }
 
-    for(int i = 1; i < yard.getNumSidings(); i++)
+    for(int i = 1; i <= yard.getNumSidings(); i++)
     {
         if(yard.movable(i, w) && (w == x))
         {
@@ -228,7 +228,7 @@ static bool chooseMove(const Yard &yard, int &from, int &to)
             source = TRACK_L;
         }else
         {
-            for(int i = 1; i < yard.getNumSidings(); i++)
+            for(int i = 1; i <= yard.getNumSidings(); i++)
             {
                 if(yard.getSiding(i).indexOf(x) != -1)
                 {
@@ -240,7 +240,7 @@ static bool chooseMove(const Yard &yard, int &from, int &to)
 
     yard.movable(source, w);
     int target = chooseTarget(yard, w, source);
-    
+
     if(target == 0)
     {
         return false;
@@ -250,6 +250,38 @@ static bool chooseMove(const Yard &yard, int &from, int &to)
     to = target;
     return true;
 }
+
+static int rollout(const Yard& yard)
+{
+    Yard copyOfYard = yard;
+    int limit = 100 * copyOfYard.getTrainSize() + 10000;
+    
+    int from;
+    int to;
+
+    while(!copyOfYard.isAssembled())
+    {
+        if(!chooseMove(copyOfYard, from, to))
+        {
+            return 1000000000;
+        }
+
+        copyOfYard.move(from, to);
+        if(copyOfYard.getMoves() > limit)
+        {
+            return 1000000000;
+        }
+    }
+
+    return copyOfYard.getMoves();
+}
+
+static void planLookAhead(const Yard &start, MoveList &plan)
+{
+    Yard yard = start;
+
+}
+
 void planTrain(const Yard &start, MoveList &plan)
 {
     // TODO: Section 6.3: your own planner. Any legal plan counts and shorter is better.
