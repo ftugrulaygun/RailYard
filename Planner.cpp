@@ -342,9 +342,120 @@ static void planLookAhead(const Yard &start, MoveList &plan)
     }
 }
 
+static void distribute(Yard &yard, MoveList &plan, int source, int low, int high)
+{
+    if(low < yard.nextWagon())
+    {
+        low = yard.nextWagon();
+    }
+    if(low > high)
+    {
+        return;
+    }
+
+    int m = high - low + 1;
+
+    bool ordered = true;
+
+    for(int i = 0; i <= m-1; i++)
+    {
+        int v;
+        if(source == TRACK_A)
+        {
+            v = yard.getArrival().get(i);
+        }else
+        {
+            v = yard.getSiding(source).get(yard.getSiding(source).size() - 1 - i);
+        }
+        if(v != low + i)
+        {
+            ordered = false;
+            break;
+        }
+    }
+
+    if(ordered)
+    {
+        for(int i = 0; i <= m-1; i++)
+        {
+            go(yard, plan, source, TRACK_D);
+        }
+
+        return;
+    }
+
+    int targets[21];
+
+    int target = 0;
+    for(int siding = 1; siding <= yard.getNumSidings(); siding++)
+    {
+        if(siding != source)
+        {
+            targets[target] = siding;
+            target++;
+        }
+    }
+
+    int bounds[21];
+
+    for(int j = 0; j <= target; j++)
+    {
+        bounds[j] = low + (m * j) / target;
+    }
+
+    for(int k = 0; k<=m-1; k++)
+    {
+        int v;
+        yard.movable(source, v);
+        
+        if(v == yard.nextWagon())
+        {
+            go(yard, plan, source, TRACK_D);
+            continue;
+        }
+
+        int j = 0;
+        while(v >= bounds[j+1])
+        {
+            j++;
+
+        }
+
+        go(yard, plan, source, targets[j]);
+    }
+
+    for(int j = 0; j<=target-1; j++)
+    {
+        distribute(yard, plan, targets[j], bounds[j], bounds[j+1] - 1);
+    }
+}
+
+static void planDistribution(const Yard &start, MoveList &plan)
+{
+    Yard yard = start;
+    distribute(yard, plan, TRACK_A, 1, yard.getTrainSize());
+}
+
 void planTrain(const Yard &start, MoveList &plan)
 {
     // TODO: Section 6.3: your own planner. Any legal plan counts and shorter is better.
     //  You may start from the greedy plan and improve it, or write something new.
-    planGreedy(start, plan); // the greedy plan until you have something better
+    if((start.getLoopCapacity() == 0) && (start.getSidingCapacity() >= start.getTrainSize()))
+    {
+        planDistribution(start, plan);
+    }else
+    {
+        planLookAhead(start, plan);
+    }
+
+    MoveList G;
+    planGreedy(start, G);
+    if(G.size() < plan.size())
+    {
+        plan.clear();
+        for(int i = 0; i <= G.size()-1; i++)
+        {
+            plan.add(G.get(i).from, G.get(i).to);
+        }
+    }
 }
