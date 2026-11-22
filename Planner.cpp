@@ -279,7 +279,67 @@ static int rollout(const Yard& yard)
 static void planLookAhead(const Yard &start, MoveList &plan)
 {
     Yard yard = start;
+    clock_t begin = clock();
 
+    while(!yard.isAssembled())
+    {
+        int from;
+        int to;
+
+        if(!chooseMove(yard, from, to))
+        {
+            break;
+        }
+
+        if(to == TRACK_D)
+        {
+            go(yard, plan, from, to);
+            continue;
+        }
+
+        if(((clock() - begin) / CLOCKS_PER_SEC) > 7)
+        {
+            go(yard, plan, from, to);
+            continue;
+        }
+
+        int bestTarget = to;
+        Yard first = yard;
+        first.move(from, to);
+        int bestCost = rollout(first);
+
+        for(int siding = 1; siding <= yard.getNumSidings(); siding++)
+        {
+            if((siding == from) || (siding == to) || (yard.getSidingCapacity() <= yard.getSiding(siding).size()))
+            {
+                continue;
+            }
+            
+            Yard trial = yard;
+            trial.move(from, siding);
+            int cost = rollout(trial);
+
+            if(cost < bestCost)
+            {
+                bestCost = cost;
+                bestTarget = siding;
+            }
+        }
+
+        if((yard.getLoopCapacity() > 0) && (from != TRACK_L) && (to != TRACK_L) && (yard.getLoop().size() < yard.getLoopCapacity()))
+        {
+            Yard trial = yard;
+            trial.move(from, TRACK_L);
+            int cost = rollout(trial);
+            if(cost < bestCost)
+            {
+                bestCost = cost;
+                bestTarget = TRACK_L;
+            }
+        }
+
+        go(yard,plan,from,bestTarget);
+    }
 }
 
 void planTrain(const Yard &start, MoveList &plan)
