@@ -195,6 +195,29 @@ static bool chooseMove(const Yard &yard, int &from, int &to)
 {
     int x = yard.nextWagon();
     int w = 0;
+
+    if(yard.movable(TRACK_A, w) && (w == x))
+    {
+        from = TRACK_A;
+        to = TRACK_D;
+        return true;
+    }
+    if(yard.movable(TRACK_L, w) && (w == x))
+    {
+        from = TRACK_L;
+        to = TRACK_D;
+        return true;
+    }
+
+    for(int i = 1; i < yard.getNumSidings(); i++)
+    {
+        if(yard.movable(i, w) && (w == x))
+        {
+            from = i;
+            to = TRACK_D;
+            return true;
+        }
+    }
 }
 void planTrain(const Yard &start, MoveList &plan)
 {
