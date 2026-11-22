@@ -218,6 +218,37 @@ static bool chooseMove(const Yard &yard, int &from, int &to)
             return true;
         }
     }
+
+    int source = TRACK_A;
+
+    if(yard.getArrival().indexOf(x) == -1)
+    {
+        if(yard.getLoop().indexOf(x) != -1)
+        {
+            source = TRACK_L;
+        }else
+        {
+            for(int i = 1; i < yard.getNumSidings(); i++)
+            {
+                if(yard.getSiding(i).indexOf(x) != -1)
+                {
+                    source = i;
+                }
+            }
+        }
+    }
+
+    yard.movable(source, w);
+    int target = chooseTarget(yard, w, source);
+    
+    if(target == 0)
+    {
+        return false;
+    }
+
+    from = source;
+    to = target;
+    return true;
 }
 void planTrain(const Yard &start, MoveList &plan)
 {
